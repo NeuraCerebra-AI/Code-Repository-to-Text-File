@@ -1,7 +1,18 @@
 import os
 
-EXCLUDED_FOLDERS = ['.git', 'out', '.vscode', 'python_env', 'node_modules', '__pycache__']
-EXCLUDED_FILES = ['package-lock.json', 'json.hpp', '.DS_Store', 'project.pbxproj', 'UserInterfaceState.xcuserstate']
+EXCLUDED_FOLDERS = [
+    '.git', '.svn', '.hg', 'node_modules', 'dist', 'build', 'target', 
+    'venv', '.venv', 'python_env', '.mypy_cache', '__pycache__', 
+    '.idea', '.vscode', '.vscode-test', '.pytest_cache', '.tox', 
+    '.coverage', '.nyc_output', 'coverage', 'logs', 'temp', 'tmp', 
+    'out', '.gradle', '.sconsign.dblite', 'XMP-Toolkit-SDK'
+]
+
+EXCLUDED_FILES = [
+    'package-lock.json', 'yarn.lock', 'pnpm-lock.yaml', 'pipfile.lock',
+    '.DS_Store', 'Thumbs.db', 'project.pbxproj', 'UserInterfaceState.xcuserstate',
+    '.class', '.pyc', '.pyo'
+]
 
 def get_all_files(folder_path):
     all_files = []
@@ -17,13 +28,16 @@ def get_all_files(folder_path):
 def generate_code_file(all_files, output_file):
     with open(output_file, 'w', encoding='utf-8') as outfile:
         for file_path in all_files:
-            with open(file_path, 'r', encoding='utf-8', errors='ignore') as infile:
-                outfile.write('"""""""""""""""""""""""""""""\n')
-                outfile.write(f"{os.path.relpath(file_path)}:\n")
-                outfile.write('"""""""""""""""""""""""""""""\n')
-                outfile.write(infile.read())
-                outfile.write('\n\n')
-    print(f"Files saved to: {os.path.abspath(output_file)}")  # Add this print statement
+            try:
+                with open(file_path, 'r', encoding='utf-8', errors='ignore') as infile:
+                    outfile.write('"""""""""""""""""""""""""""""\n')
+                    outfile.write(f"<{os.path.relpath(file_path)}>\n")
+                    outfile.write(infile.read())
+                    outfile.write(f"</{os.path.relpath(file_path)}>\n")
+                    outfile.write('"""""""""""""""""""""""""""""\n\n')
+            except IOError as e:
+                print(f"Error reading file {file_path}: {e}")
+    print(f"Files saved to: {os.path.abspath(output_file)}")
 
 def main():
     folder_path = input("Enter the path to the folder for the code repository: ")
@@ -31,7 +45,7 @@ def main():
         print("Invalid folder path.")
         return
     
-    output_file = os.path.join(folder_path, 'repository_code.txt')  # Update output file path
+    output_file = os.path.join(folder_path, 'repository_code.txt')
     all_files = get_all_files(folder_path)
     if not all_files:
         print("No files found in the specified folder.")
